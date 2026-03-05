@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Bread on What We&#39;re Having</title>
+    <link>https://example.org/tags/bread/</link>
+    <description>Recent content in Bread on What We&#39;re Having</description>
+    <generator>Hugo</generator>
+    <language>en-us</language>
+    <lastBuildDate>Mon, 02 Mar 2026 08:30:00 +0000</lastBuildDate>
+    <atom:link href="https://example.org/tags/bread/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Demo: Overnight Breakfast Baguette</title>
+      <link>https://example.org/recipes/demo-overnight-baguette/</link>
+      <pubDate>Mon, 02 Mar 2026 08:30:00 +0000</pubDate>
+      <guid>https://example.org/recipes/demo-overnight-baguette/</guid>
+      <description>An easy overnight baguette with minimal prep.</description>
+    </item>
+  </channel>
+</rss>
