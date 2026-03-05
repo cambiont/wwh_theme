@@ -33,9 +33,9 @@ Create:
 `content/search/_index.md`
 
 ```toml
----
++++
 title = "Search"
----
++++
 ```
 
 ## 4. Add Recipe Content
@@ -47,7 +47,7 @@ Put recipes in:
 Front matter example:
 
 ```toml
----
++++
 title = "My Recipe"
 description = "Short description"
 summary = "Optional summary"
@@ -57,7 +57,7 @@ featured_image = "/food_images/example.jpg"
 tags = ["Dinner"]
 # or: categories = ["Dinner"]
 draft = false
----
++++
 ```
 
 ## 5. Add Images
