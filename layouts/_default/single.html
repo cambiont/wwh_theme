@@ -1,0 +1,63 @@
+{{ define "head" }}
+  {{ $singleCss := resources.Get "css/single.css" | minify | fingerprint }}
+  <link rel="stylesheet" href="{{ $singleCss.RelPermalink }}" integrity="{{ $singleCss.Data.Integrity }}" />
+{{ end }}
+
+{{ define "main" }}
+  {{ $terms := .Params.categories }}
+  {{ $taxonomy := "categories" }}
+  {{ $image := or .Params.image .Params.featured_image }}
+  {{ $imageStaticPath := printf "static/%s" (replaceRE "^/" "" $image) }}
+  {{ $imageIsRemote := or (hasPrefix $image "http://") (hasPrefix $image "https://") }}
+  {{ $showImage := and $image (or $imageIsRemote (fileExists $imageStaticPath)) }}
+  {{ if not $terms }}
+    {{ $terms = .Params.tags }}
+    {{ $taxonomy = "tags" }}
+  {{ end }}
+  <article class="recipe-content">
+    <div class="recipe-head-row">
+      <div class="recipe-head-main">
+        <h1 class="recipe-title">{{ .Title }}</h1>
+        {{ with $terms }}
+          <div class="tag-list" aria-label="Categories">
+            {{ range . }}
+              <a class="tag-pill" href="{{ printf "/%s/%s/" $taxonomy (. | urlize) | relURL }}">{{ . }}</a>
+            {{ end }}
+          </div>
+        {{ end }}
+      </div>
+      <button id="qr-toggle" class="qr-toggle" type="button" aria-expanded="false" aria-controls="qr-panel" aria-label="Show share QR code" title="Show share QR code">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-qr-code-icon lucide-qr-code"><rect width="5" height="5" x="3" y="3" rx="1"/><rect width="5" height="5" x="16" y="3" rx="1"/><rect width="5" height="5" x="3" y="16" rx="1"/><path d="M21 16h-3a2 2 0 0 0-2 2v3"/><path d="M21 21v.01"/><path d="M12 7v3a2 2 0 0 1-2 2H7"/><path d="M3 12h.01"/><path d="M12 3h.01"/><path d="M12 16v.01"/><path d="M16 12h1"/><path d="M21 12v.01"/><path d="M12 21v-1"/></svg>
+      </button>
+    </div>
+    <div id="qr-panel" class="qr-panel" hidden>
+      <div id="output" class="qr-output"></div>
+    </div>
+    {{ if $showImage }}
+      <img class="recipe-feature-image" src="{{ $image | relURL }}" alt="{{ .Title }}" loading="lazy" />
+    {{ end }}
+    <div class="recipe-body">{{ .Content }}</div>
+  </article>
+  <script>
+    const PAGEURL = window.location.href;
+    document.addEventListener("DOMContentLoaded", function () {
+      const toggle = document.getElementById("qr-toggle");
+      const panel = document.getElementById("qr-panel");
+      if (!toggle || !panel) return;
+      toggle.addEventListener("click", function () {
+        const open = panel.hasAttribute("hidden");
+        if (open) {
+          panel.removeAttribute("hidden");
+          toggle.setAttribute("aria-expanded", "true");
+        } else {
+          panel.setAttribute("hidden", "");
+          toggle.setAttribute("aria-expanded", "false");
+        }
+      });
+    });
+  </script>
+  {{ $qr := resources.Get "js/qr/qr.js" | fingerprint }}
+  {{ $qrApp := resources.Get "js/qr/qr_app.js" | minify | fingerprint }}
+  <script defer src="{{ $qr.RelPermalink }}" integrity="{{ $qr.Data.Integrity }}"></script>
+  <script defer src="{{ $qrApp.RelPermalink }}" integrity="{{ $qrApp.Data.Integrity }}"></script>
+{{ end }}

@@ -1,0 +1,149 @@
+{{ $isHome := .IsHome }}
+{{ $allRecipes := .RegularPages.ByDate.Reverse }}
+{{ if .IsHome }}
+  {{ $allRecipes = .Site.RegularPages.ByDate.Reverse }}
+{{ end }}
+
+{{ $hero := false }}
+{{ $heroIndex := -1 }}
+{{ $listPages := $allRecipes }}
+
+{{ if $isHome }}
+  {{ range $i, $recipe := $allRecipes }}
+    {{ $image := or $recipe.Params.image $recipe.Params.featured_image }}
+    {{ $imageStaticPath := printf "static/%s" (replaceRE "^/" "" $image) }}
+    {{ $imageIsRemote := or (hasPrefix $image "http://") (hasPrefix $image "https://") }}
+    {{ $imageExists := and $image (or $imageIsRemote (fileExists $imageStaticPath)) }}
+    {{ if and (not $hero) $imageExists }}
+      {{ $hero = $recipe }}
+      {{ $heroIndex = $i }}
+    {{ end }}
+  {{ end }}
+
+  {{ if and (not $hero) (gt (len $allRecipes) 0) }}
+    {{ $hero = index $allRecipes 0 }}
+    {{ $heroIndex = 0 }}
+  {{ end }}
+
+  {{ if ge $heroIndex 0 }}
+    {{ $listPages = slice }}
+    {{ range $i, $recipe := $allRecipes }}
+      {{ if ne $i $heroIndex }}
+        {{ $listPages = $listPages | append $recipe }}
+      {{ end }}
+    {{ end }}
+  {{ end }}
+{{ end }}
+
+{{ $paginator := .Paginate $listPages 7 }}
+
+<div class="layout">
+  <section class="stream" aria-label="Recipe feed">
+    {{ if $hero }}
+      {{ $heroImage := or $hero.Params.image $hero.Params.featured_image }}
+      {{ $heroImageStaticPath := printf "static/%s" (replaceRE "^/" "" $heroImage) }}
+      {{ $heroImageIsRemote := or (hasPrefix $heroImage "http://") (hasPrefix $heroImage "https://") }}
+      {{ $heroImageExists := or $heroImageIsRemote (fileExists $heroImageStaticPath) }}
+      <article class="hero">
+        <div class="hero-copy">
+          <p class="hero-label">Latest Recipe</p>
+          <h2 class="hero-title"><a href="{{ $hero.RelPermalink }}">{{ $hero.Title }}</a></h2>
+          {{ with or $hero.Description $hero.Summary }}
+            <p class="hero-description">{{ . | plainify }}</p>
+          {{ end }}
+          <p class="item-meta">
+            {{ with or $hero.Params.time $hero.Params.cookTime $hero.Params.cook_time }}{{ . }} · {{ end }}
+            {{ $hero.Date.Format "Jan 2, 2006" }}
+          </p>
+        </div>
+        {{ if and $heroImage $heroImageExists }}
+          <img class="hero-image" src="{{ $heroImage | relURL }}" alt="{{ $hero.Title }}" loading="lazy" />
+        {{ else }}
+          <div class="hero-image" aria-hidden="true"></div>
+        {{ end }}
+      </article>
+    {{ end }}
+
+    {{ range $paginator.Pages }}
+      {{ $recipe := . }}
+      {{ $terms := $recipe.Params.categories }}
+      {{ $taxonomy := "categories" }}
+      {{ $thumbImage := or $recipe.Params.image $recipe.Params.featured_image }}
+      {{ $thumbImageStaticPath := printf "static/%s" (replaceRE "^/" "" $thumbImage) }}
+      {{ $thumbImageIsRemote := or (hasPrefix $thumbImage "http://") (hasPrefix $thumbImage "https://") }}
+      {{ $thumbImageExists := or $thumbImageIsRemote (fileExists $thumbImageStaticPath) }}
+      {{ if not $terms }}
+        {{ $terms = $recipe.Params.tags }}
+        {{ $taxonomy = "tags" }}
+      {{ end }}
+      <article class="recipe-item">
+        {{ if and $thumbImage $thumbImageExists }}
+          <img class="thumb" src="{{ $thumbImage | relURL }}" alt="{{ $recipe.Title }}" loading="lazy" />
+        {{ else }}
+          <div class="thumb" aria-hidden="true"></div>
+        {{ end }}
+        <div>
+          <h2 class="item-title"><a href="{{ $recipe.RelPermalink }}">{{ $recipe.Title }}</a></h2>
+          <p class="item-meta">
+            {{ with or $recipe.Params.time $recipe.Params.cookTime $recipe.Params.cook_time }}{{ . }} · {{ end }}
+            {{ $recipe.Date.Format "Jan 2, 2006" }}
+          </p>
+          {{ with or $recipe.Description $recipe.Summary }}
+            <p class="item-description">{{ . | plainify }}</p>
+          {{ end }}
+          {{ with $terms }}
+            <div class="tag-list" aria-label="Categories">
+              {{ range . }}
+                <a class="tag-pill" href="{{ printf "/%s/%s/" $taxonomy (. | urlize) | relURL }}">{{ . }}</a>
+              {{ end }}
+            </div>
+          {{ end }}
+        </div>
+      </article>
+    {{ else }}
+      <p>No recipes yet.</p>
+    {{ end }}
+
+    {{ if gt $paginator.TotalPages 1 }}
+      <nav class="pager" aria-label="Pagination">
+        {{ if $paginator.HasPrev }}
+          <a href="{{ $paginator.Prev.URL }}" aria-label="Previous page">Prev</a>
+        {{ end }}
+        {{ range $paginator.Pagers }}
+          {{ if eq .PageNumber $paginator.PageNumber }}
+            <span class="active">{{ .PageNumber }}</span>
+          {{ else }}
+            <a href="{{ .URL }}">{{ .PageNumber }}</a>
+          {{ end }}
+        {{ end }}
+        {{ if $paginator.HasNext }}
+          <a href="{{ $paginator.Next.URL }}" aria-label="Next page">Next</a>
+        {{ end }}
+      </nav>
+    {{ end }}
+  </section>
+
+  <aside class="sidebar-box" aria-label="Categories">
+    {{ $taxTitle := "Categories" }}
+    {{ $taxTerms := .Site.Taxonomies.categories }}
+    {{ if eq (len $taxTerms) 0 }}
+      {{ $taxTerms = .Site.Taxonomies.tags }}
+      {{ $taxTitle = "Tags" }}
+    {{ end }}
+    <h2 class="sidebar-title">{{ $taxTitle }}</h2>
+    {{ with $taxTerms }}
+      <ul class="cat-links">
+        {{ range .ByCount }}
+          <li>
+            <a href="{{ .Page.RelPermalink }}">
+              <span>{{ .Page.Title }}</span>
+              <span class="cat-count">{{ .Count }}</span>
+            </a>
+          </li>
+        {{ end }}
+      </ul>
+    {{ else }}
+      <p class="item-meta">Add `categories` or `tags` in recipe front matter to populate this list.</p>
+    {{ end }}
+  </aside>
+</div>

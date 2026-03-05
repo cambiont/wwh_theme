@@ -1,0 +1,15 @@
+{{ define "head" }}
+  {{ $searchCss := resources.Get "css/search.css" | minify | fingerprint }}
+  <link rel="stylesheet" href="{{ $searchCss.RelPermalink }}" integrity="{{ $searchCss.Data.Integrity }}" />
+{{ end }}
+
+{{ define "main" }}
+  <section class="search-shell" aria-label="Recipe search">
+    <h1 class="search-title">Search Recipes</h1>
+    {{ partial "search-form.html" . }}
+    <ul id="results">
+      <li>Enter a keyword above to search this site.</li>
+    </ul>
+  </section>
+  {{ partial "search-index.html" . }}
+{{ end }}

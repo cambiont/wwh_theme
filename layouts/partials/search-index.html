@@ -1,0 +1,20 @@
+<script>
+  window.store = {
+    {{- $pages := .Site.RegularPages -}}
+    {{- range $i, $p := $pages -}}
+      {{- if gt $i 0 }},{{ end -}}
+      {{- $terms := or $p.Params.categories $p.Params.tags -}}
+      {{- $category := delimit $terms " " -}}
+      {{- $p.RelPermalink | jsonify | safeJS }}: {
+        "title": {{ $p.Title | jsonify | safeJS }},
+        "category": {{ $category | jsonify | safeJS }},
+        "content": {{ $p.Plain | jsonify | safeJS }},
+        "url": {{ $p.RelPermalink | jsonify | safeJS }}
+      }
+    {{- end -}}
+  };
+</script>
+{{ $lunr := resources.Get "js/search/lunr.js" | fingerprint }}
+{{ $search := resources.Get "js/search/search.js" | minify | fingerprint }}
+<script defer src="{{ $lunr.RelPermalink }}" integrity="{{ $lunr.Data.Integrity }}"></script>
+<script defer src="{{ $search.RelPermalink }}" integrity="{{ $search.Data.Integrity }}"></script>
