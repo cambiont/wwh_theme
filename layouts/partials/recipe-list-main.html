@@ -11,9 +11,14 @@
 {{ if $isHome }}
   {{ range $i, $recipe := $allRecipes }}
     {{ $image := or $recipe.Params.image $recipe.Params.featured_image }}
-    {{ $imageStaticPath := printf "static/%s" (replaceRE "^/" "" $image) }}
+    {{ $imageRes := false }}
+    {{ if $image }}
+      {{ $imageRes = $recipe.Resources.GetMatch $image }}
+    {{ end }}
     {{ $imageIsRemote := or (hasPrefix $image "http://") (hasPrefix $image "https://") }}
-    {{ $imageExists := and $image (or $imageIsRemote (fileExists $imageStaticPath)) }}
+    {{ $imageStaticPath := printf "static/%s" (replaceRE "^/" "" $image) }}
+    {{ $imageIsStatic := and $image (fileExists $imageStaticPath) }}
+    {{ $imageExists := or $imageRes $imageIsRemote $imageIsStatic }}
     {{ if and (not $hero) $imageExists }}
       {{ $hero = $recipe }}
       {{ $heroIndex = $i }}
@@ -41,9 +46,13 @@
   <section class="stream" aria-label="Recipe feed">
     {{ if $hero }}
       {{ $heroImage := or $hero.Params.image $hero.Params.featured_image }}
-      {{ $heroImageStaticPath := printf "static/%s" (replaceRE "^/" "" $heroImage) }}
+      {{ $heroImageRes := false }}
+      {{ if $heroImage }}
+        {{ $heroImageRes = $hero.Resources.GetMatch $heroImage }}
+      {{ end }}
       {{ $heroImageIsRemote := or (hasPrefix $heroImage "http://") (hasPrefix $heroImage "https://") }}
-      {{ $heroImageExists := or $heroImageIsRemote (fileExists $heroImageStaticPath) }}
+      {{ $heroImageStaticPath := printf "static/%s" (replaceRE "^/" "" $heroImage) }}
+      {{ $heroImageIsStatic := and $heroImage (fileExists $heroImageStaticPath) }}
       <article class="hero">
         <div class="hero-copy">
           <p class="hero-label">Latest Recipe</p>
@@ -56,7 +65,11 @@
             {{ $hero.Date.Format "Jan 2, 2006" }}
           </p>
         </div>
-        {{ if and $heroImage $heroImageExists }}
+        {{ if $heroImageRes }}
+          <img class="hero-image" src="{{ $heroImageRes.RelPermalink }}" alt="{{ $hero.Title }}" loading="lazy" />
+        {{ else if $heroImageIsRemote }}
+          <img class="hero-image" src="{{ $heroImage }}" alt="{{ $hero.Title }}" loading="lazy" />
+        {{ else if $heroImageIsStatic }}
           <img class="hero-image" src="{{ $heroImage | relURL }}" alt="{{ $hero.Title }}" loading="lazy" />
         {{ else }}
           <div class="hero-image" aria-hidden="true"></div>
@@ -69,15 +82,23 @@
       {{ $terms := $recipe.Params.categories }}
       {{ $taxonomy := "categories" }}
       {{ $thumbImage := or $recipe.Params.image $recipe.Params.featured_image }}
-      {{ $thumbImageStaticPath := printf "static/%s" (replaceRE "^/" "" $thumbImage) }}
+      {{ $thumbImageRes := false }}
+      {{ if $thumbImage }}
+        {{ $thumbImageRes = $recipe.Resources.GetMatch $thumbImage }}
+      {{ end }}
       {{ $thumbImageIsRemote := or (hasPrefix $thumbImage "http://") (hasPrefix $thumbImage "https://") }}
-      {{ $thumbImageExists := or $thumbImageIsRemote (fileExists $thumbImageStaticPath) }}
+      {{ $thumbImageStaticPath := printf "static/%s" (replaceRE "^/" "" $thumbImage) }}
+      {{ $thumbImageIsStatic := and $thumbImage (fileExists $thumbImageStaticPath) }}
       {{ if not $terms }}
         {{ $terms = $recipe.Params.tags }}
         {{ $taxonomy = "tags" }}
       {{ end }}
       <article class="recipe-item">
-        {{ if and $thumbImage $thumbImageExists }}
+        {{ if $thumbImageRes }}
+          <img class="thumb" src="{{ $thumbImageRes.RelPermalink }}" alt="{{ $recipe.Title }}" loading="lazy" />
+        {{ else if $thumbImageIsRemote }}
+          <img class="thumb" src="{{ $thumbImage }}" alt="{{ $recipe.Title }}" loading="lazy" />
+        {{ else if $thumbImageIsStatic }}
           <img class="thumb" src="{{ $thumbImage | relURL }}" alt="{{ $recipe.Title }}" loading="lazy" />
         {{ else }}
           <div class="thumb" aria-hidden="true"></div>

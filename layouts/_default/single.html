@@ -7,9 +7,13 @@
   {{ $terms := .Params.categories }}
   {{ $taxonomy := "categories" }}
   {{ $image := or .Params.image .Params.featured_image }}
-  {{ $imageStaticPath := printf "static/%s" (replaceRE "^/" "" $image) }}
+  {{ $imageRes := false }}
+  {{ if $image }}
+    {{ $imageRes = .Resources.GetMatch $image }}
+  {{ end }}
   {{ $imageIsRemote := or (hasPrefix $image "http://") (hasPrefix $image "https://") }}
-  {{ $showImage := and $image (or $imageIsRemote (fileExists $imageStaticPath)) }}
+  {{ $imageStaticPath := printf "static/%s" (replaceRE "^/" "" $image) }}
+  {{ $imageIsStatic := and $image (fileExists $imageStaticPath) }}
   {{ if not $terms }}
     {{ $terms = .Params.tags }}
     {{ $taxonomy = "tags" }}
@@ -33,7 +37,11 @@
     <div id="qr-panel" class="qr-panel" hidden>
       <div id="output" class="qr-output"></div>
     </div>
-    {{ if $showImage }}
+    {{ if $imageRes }}
+      <img class="recipe-feature-image" src="{{ $imageRes.RelPermalink }}" alt="{{ .Title }}" loading="lazy" />
+    {{ else if $imageIsRemote }}
+      <img class="recipe-feature-image" src="{{ $image }}" alt="{{ .Title }}" loading="lazy" />
+    {{ else if $imageIsStatic }}
       <img class="recipe-feature-image" src="{{ $image | relURL }}" alt="{{ .Title }}" loading="lazy" />
     {{ end }}
     <div class="recipe-body">{{ .Content }}</div>
