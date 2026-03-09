@@ -1,5 +1,30 @@
 # Install Checklist (Fresh Hugo Site)
 
+## Quick Start: New Blank Hugo Site + Theme from Git
+
+```bash
+# 1) Create a new blank Hugo site
+hugo new site my-site
+cd my-site
+git init
+
+# 2) Add this theme from Git (SSH)
+git submodule add git@github.com:cambiont/wwh_theme.git themes/wwh_theme
+
+# 3) Enable the theme
+printf '\ntheme = "wwh_theme"\n' >> hugo.toml
+
+# 4) Run locally
+hugo server -D
+```
+
+If the theme includes an example site, you can bootstrap quickly:
+
+```bash
+cp -R themes/wwh_theme/exampleSite/* .
+hugo server -D
+```
+
 ## 1. Copy Theme Folder
 
 Copy this theme into your new site:
